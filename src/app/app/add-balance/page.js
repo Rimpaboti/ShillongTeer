@@ -254,9 +254,9 @@ export default function PlayBoard() {
           <div className="mb-6">
             <h2 className="text-xl font-bold mb-2">Add Money</h2>
             <p className="mb-1">Pay using UPI ID:</p>
-            <p className="font-mono text-yellow-400 mb-2">exampleupi@okbank</p>
+            <p className="font-mono text-yellow-400 mb-2">9435153153@ybl</p>
             <p className="mb-1">Or Google Pay / PhonePe:</p>
-            <p className="font-mono text-yellow-400 mb-4">+91 9876543210</p>
+            <p className="font-mono text-yellow-400 mb-4">+91 9435153153</p>
 
             <label className="block mb-2">Transaction ID:</label>
             <input
