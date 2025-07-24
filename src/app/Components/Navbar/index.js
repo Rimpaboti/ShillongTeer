@@ -227,6 +227,26 @@ export default function Navbar() {
           >
             Balance
           </Link>
+           <Link
+            href="/app/bet-history"
+            className={`text-sm font-semibold transition ${
+              isActive('/app/bet-history')
+                ? 'text-yellow-400'
+                : 'text-white hover:text-yellow-400'
+            }`}
+          >
+            Bet History
+          </Link>
+           <Link
+            href="/app/results"
+            className={`text-sm font-semibold transition ${
+              isActive('/app/results')
+                ? 'text-yellow-400'
+                : 'text-white hover:text-yellow-400'
+            }`}
+          >
+            Results
+          </Link>
           <Link
             href="/app/referral"
             className={`text-sm font-semibold transition ${
