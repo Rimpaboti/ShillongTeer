@@ -40,7 +40,7 @@ export default function BetHistoryPage() {
     console.log(uid)
     try {
       const q = query(
-        collection(db, 'bets'),
+        collection(db, 'subbets'),
         where('uid', '==', uid),
         orderBy('createdAt', 'desc')
       );

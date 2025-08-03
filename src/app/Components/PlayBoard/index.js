@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -10,6 +10,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
 } from 'firebase/firestore';
 import firebaseApp from '@/firebase';
 
@@ -24,85 +25,108 @@ export default function PlayBoard() {
   const [user, setUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [activeGameSlot, setActiveGameSlot] = useState(null);
+  const [countdown, setCountdown] = useState('');
 
   const numberOptions =
     range === '0-9'
       ? Array.from({ length: 10 }, (_, i) => i)
       : Array.from({ length: 100 }, (_, i) => i.toString().padStart(2, '0'));
 
-  const gameTimes = [
-    { label: '1:00 PM', resultHour: 13 },
-    { label: '6:00 PM', resultHour: 18 },
-    { label: '8:00 PM', resultHour: 20 },
-  ];
+  const getGameSlot = () => {
+    const now = new Date();
+    const currentTime = now.getTime();
 
+    const today = new Date();
+    const cutoff1 = new Date(today.setHours(12, 45, 0, 0)).getTime();
+    const cutoff2 = new Date(today.setHours(17, 45, 0, 0)).getTime();
+    const cutoff3 = new Date(today.setHours(19, 45, 0, 0)).getTime();
+
+    let slotLabel = '';
+    let closesAt;
+
+    if (currentTime < cutoff1) {
+      slotLabel = '1:00 PM';
+      closesAt = new Date(cutoff1);
+    } else if (currentTime < cutoff2) {
+      slotLabel = '6:00 PM';
+      closesAt = new Date(cutoff2);
+    } else if (currentTime < cutoff3) {
+      slotLabel = '8:00 PM';
+      closesAt = new Date(cutoff3);
+    } else {
+      const tomorrow = new Date();
+      tomorrow.setDate(now.getDate() + 1);
+      tomorrow.setHours(12, 45, 0, 0);
+      slotLabel = '1:00 PM';
+      closesAt = tomorrow;
+    }
+
+    return { label: slotLabel, closesAt };
+  };
+
+  // ⏱️ Countdown effect
+  useEffect(() => {
+    const updateCountdown = () => {
+      if (!activeGameSlot?.closesAt) return;
+
+      const now = new Date().getTime();
+      const closeTime = activeGameSlot.closesAt.getTime();
+      const distance = closeTime - now;
+
+      if (distance <= 0) {
+        setCountdown('00:00:00');
+        setActiveGameSlot(getGameSlot()); // refresh next slot
+        return;
+      }
+
+      const hours = Math.floor(distance / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setCountdown(
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(
+          seconds
+        ).padStart(2, '0')}`
+      );
+    };
+
+    const timer = setInterval(updateCountdown, 1000);
+    updateCountdown(); // initial call
+
+    return () => clearInterval(timer);
+  }, [activeGameSlot]);
+
+  // 🔁 Load user + wallet + slot
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const walletRef = doc(db, 'wallets', currentUser.uid);
+        // const walletRef = doc(db, 'wallets', currentUser.uid);
+        const walletRef = doc(db, 'subwallets', currentUser.uid);
         const walletSnap = await getDoc(walletRef);
         if (walletSnap.exists()) {
-          const bal = walletSnap.data().balance ?? 0;
-          setWalletBalance(bal);
+          setWalletBalance(walletSnap.data().balance ?? 0);
         } else {
-          // Create wallet if doesn't exist
-          await updateDoc(walletRef, {
+          await setDoc(walletRef, {
             email: currentUser.email,
             uid: currentUser.uid,
             balance: 0,
             createdAt: serverTimestamp(),
-          }).catch(() => {});
+          });
           setWalletBalance(0);
         }
       }
     });
 
-    // Determine active slot
-    const now = new Date();
-    let foundSlot = null;
-
-    for (let game of gameTimes) {
-      const resultTime = new Date();
-      resultTime.setHours(game.resultHour, 0, 0, 0);
-
-      const closeTime = new Date(resultTime.getTime() - 15 * 60 * 1000);
-
-      if (now < closeTime) {
-        foundSlot = {
-          label: game.label,
-          closesAt: closeTime,
-        };
-        break;
-      }
-    }
-
-    if (!foundSlot) {
-      const nextSlot = gameTimes[0];
-      const resultTime = new Date();
-      resultTime.setDate(now.getDate() + 1);
-      resultTime.setHours(nextSlot.resultHour, 0, 0, 0);
-      const closeTime = new Date(resultTime.getTime() - 15 * 60 * 1000);
-      foundSlot = {
-        label: nextSlot.label,
-        closesAt: closeTime,
-      };
-    }
-
-    setActiveGameSlot(foundSlot);
+    setActiveGameSlot(getGameSlot());
 
     return () => unsubscribe();
-  }, [auth, db]);
+  }, []);
 
+  // 🟡 Submit Bet
   const handleSubmit = async () => {
-    if (!user) {
-      alert('You must be logged in to play.');
-      return;
-    }
-    if (selectedNumber === null || undefined) {
-      alert('Please select a number.');
-      return;
-    }
+    if (!user) return alert('You must be logged in to play.');
+    if (selectedNumber === null || selectedNumber === undefined) return alert('Please select a number.');
 
     const amount = parseFloat(betAmount);
     if (isNaN(amount) || amount < 10 || amount > 20000) {
@@ -116,7 +140,14 @@ export default function PlayBoard() {
     }
 
     const now = new Date();
+    const gameSlot = getGameSlot();
 
+    if (now.getTime() > gameSlot.closesAt.getTime()) {
+      alert(`This game slot (${gameSlot.label}) is already closed. Try the next one.`);
+      setActiveGameSlot(getGameSlot());
+      return;
+    }
+    const slotDate = gameSlot.closesAt;
     const bet = {
       uid: user.uid,
       email: user.email,
@@ -124,17 +155,18 @@ export default function PlayBoard() {
       amount: amount,
       range,
       createdAt: serverTimestamp(),
-      day: now.toLocaleDateString(),
+      // day: `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`,
+      day: `${String(slotDate.getDate()).padStart(2, '0')}/${String(slotDate.getMonth() + 1).padStart(2, '0')}/${slotDate.getFullYear()}`,
       time: now.toLocaleTimeString(),
-      gameSlot: activeGameSlot?.label || 'Unknown',
+      gameSlot: gameSlot.label,
     };
 
     setSubmitting(true);
     try {
-      // Save bet
-      await addDoc(collection(db, 'bets'), bet);
-      // Deduct balance
-      const walletRef = doc(db, 'wallets', user.uid);
+      // await addDoc(collection(db, 'bets'), bet);
+      await addDoc(collection(db, 'subbets'), bet);
+
+      const walletRef = doc(db, 'subwallets', user.uid);
       await updateDoc(walletRef, {
         balance: (walletBalance ?? 0) - amount,
         updatedAt: serverTimestamp(),
@@ -144,6 +176,7 @@ export default function PlayBoard() {
       alert('Bet placed successfully!');
       setSelectedNumber(null);
       setBetAmount('');
+      setActiveGameSlot(getGameSlot());
     } catch (error) {
       console.error('Error placing bet:', error);
       alert('Failed to place bet.');
@@ -153,34 +186,39 @@ export default function PlayBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="max-w-xl mx-auto bg-gray-800 rounded-lg shadow-2xl p-6">
-        <h1 className="text-2xl font-bold mb-4">Play Board</h1>
+    <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
+      <div className="max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-2xl p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">🎯 Play Board</h1>
 
-        {/* Wallet */}
-        <div className="mb-6">
-          <p className="text-lg">
+        {/* Wallet Info */}
+        <div className="mb-6 text-sm sm:text-base">
+          <p className="mb-1">
             Wallet Balance:{' '}
             <span className="font-bold text-yellow-400">
               ₹{walletBalance?.toFixed(2) ?? '...'}
             </span>
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-gray-400">
             {user ? `Logged in as: ${user.email}` : 'Not logged in'}
           </p>
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-gray-400 mt-2">
             Current Game Slot:{' '}
-            <span className="font-bold">
+            <span className="font-bold text-yellow-300">
               {activeGameSlot
-                ? `${activeGameSlot.label} (Closes at ${activeGameSlot.closesAt.toLocaleTimeString()})`
+                ? `${activeGameSlot.label} (Closes at ${activeGameSlot.closesAt.toLocaleTimeString()} on ${activeGameSlot.closesAt.toLocaleDateString('en-GB')})`
                 : 'Calculating...'}
             </span>
           </p>
+          {countdown && (
+            <p className="text-sm mt-1 text-green-400 font-mono">
+              ⏳ Closes in: {countdown}
+            </p>
+          )}
         </div>
 
         {/* Range Selector */}
         <div className="mb-4">
-          <label className="block mb-2">Select Number Range:</label>
+          <label className="block mb-2 font-medium">Select Number Range:</label>
           <select
             value={range}
             onChange={(e) => {
@@ -195,15 +233,15 @@ export default function PlayBoard() {
         </div>
 
         {/* Number Grid */}
-        <div className="mb-4">
-          <label className="block mb-2">Pick a Number:</label>
-          <div className="grid grid-cols-5 gap-2">
+        <div className="mb-6">
+          <label className="block mb-2 font-medium">Pick a Number:</label>
+          <div className={`grid gap-2 ${range === '0-9' ? 'grid-cols-5' : 'grid-cols-6 sm:grid-cols-8 md:grid-cols-10'}`}>
             {numberOptions.map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => setSelectedNumber(num)}
-                className={`px-4 py-2 rounded text-center ${
+                className={`px-3 py-2 rounded text-sm sm:text-base text-center transition ${
                   selectedNumber === num
                     ? 'bg-yellow-500 text-black font-bold'
                     : 'bg-gray-700 hover:bg-gray-600'
@@ -217,7 +255,7 @@ export default function PlayBoard() {
 
         {/* Bet Amount */}
         <div className="mb-6">
-          <label className="block mb-2">Bet Amount (₹):</label>
+          <label className="block mb-2 font-medium">Bet Amount (₹):</label>
           <input
             type="number"
             min="10"
@@ -229,12 +267,12 @@ export default function PlayBoard() {
           />
         </div>
 
-        {/* Submit */}
+        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={submitting || selectedNumber === null}
           className={`w-full py-3 rounded-md text-black font-semibold transition ${
-            submitting || selectedNumber == null || selectedNumber == undefined
+            submitting || selectedNumber == null
               ? 'bg-yellow-100 cursor-not-allowed'
               : 'bg-yellow-500 hover:bg-yellow-600'
           }`}

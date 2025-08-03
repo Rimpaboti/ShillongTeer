@@ -1,0 +1,7 @@
+{
+  "/public/login/page": "app/public/login/page.js",
+  "/app/play/page": "app/app/play/page.js",
+  "/app/results/page": "app/app/results/page.js",
+  "/app/sub-admin/add-users/page": "app/app/sub-admin/add-users/page.js",
+  "/app/add-balance/page": "app/app/add-balance/page.js"
+}

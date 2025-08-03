@@ -22,7 +22,7 @@ export default function ResultsPage() {
       setLoading(true);
       try {
         const resultsQuery = query(
-          collection(db, 'results'),
+          collection(db, 'subresults'),
           orderBy('declaredAt', 'desc'),
           limit(30)
         );
