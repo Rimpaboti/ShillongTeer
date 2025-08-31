@@ -1,9 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/app/results/page": "app/app/results/page.js",
-  "/app/bet-history/page": "app/app/bet-history/page.js",
-  "/app/admin/user-bets/page": "app/app/admin/user-bets/page.js",
-  "/app/admin/declare-result/page": "app/app/admin/declare-result/page.js",
-  "/app/admin/wallet/page": "app/app/admin/wallet/page.js"
-}
