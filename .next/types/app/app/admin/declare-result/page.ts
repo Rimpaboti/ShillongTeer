@@ -1,4 +1,4 @@
-// File: E:\Nagaland\gamling\megaend-new\src\app\app\admin\declare-result\page.js
+// File: E:\megaend-new\src\app\app\admin\declare-result\page.js
 import * as entry from '../../../../../../src/app/app/admin/declare-result/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

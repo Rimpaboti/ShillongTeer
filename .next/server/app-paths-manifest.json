@@ -1,7 +1,9 @@
 {
-  "/public/login/page": "app/public/login/page.js",
-  "/app/play/page": "app/app/play/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/app/results/page": "app/app/results/page.js",
-  "/app/sub-admin/add-users/page": "app/app/sub-admin/add-users/page.js",
-  "/app/add-balance/page": "app/app/add-balance/page.js"
+  "/app/bet-history/page": "app/app/bet-history/page.js",
+  "/app/admin/user-bets/page": "app/app/admin/user-bets/page.js",
+  "/app/admin/declare-result/page": "app/app/admin/declare-result/page.js",
+  "/app/admin/wallet/page": "app/app/admin/wallet/page.js"
 }

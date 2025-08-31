@@ -31,7 +31,7 @@ export default function Page() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userRef = doc(db, 'users', user.uid);
+        const userRef = doc(db, 's_users', user.uid);
         const userSnap = await getDoc(userRef);
         const roleFromDb = userSnap.exists() ? userSnap.data().role || 'user' : 'user';
         setRole(roleFromDb);

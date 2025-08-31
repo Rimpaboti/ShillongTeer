@@ -163,7 +163,7 @@ export async function POST(req) {
     const userRecord = await auth.createUser({ email, password });
 
     // ✅ Save user data to Firestore
-    await db.collection('users').doc(userRecord.uid).set({
+    await db.collection('s_users').doc(userRecord.uid).set({
       uid: userRecord.uid,
       email,
       role: 'user',
@@ -171,7 +171,7 @@ export async function POST(req) {
       createdAt: new Date().toISOString(),
     });
     // ✅ Create wallet for the user
-    await db.collection('subwallets').doc(userRecord.uid).set({
+    await db.collection('s_subwallets').doc(userRecord.uid).set({
       uid: userRecord.uid,
       email,
       balance: 0,

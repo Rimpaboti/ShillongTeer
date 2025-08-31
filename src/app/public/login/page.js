@@ -23,7 +23,7 @@ export default function LoginPage() {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
 
-      const userDocRef = doc(db, 'users', uid);
+      const userDocRef = doc(db, 's_users', uid);
       const userSnap = await getDoc(userDocRef);
 
       if (userSnap.exists()) {

@@ -32,39 +32,68 @@ export default function PlayBoard() {
       ? Array.from({ length: 10 }, (_, i) => i)
       : Array.from({ length: 100 }, (_, i) => i.toString().padStart(2, '0'));
 
-  const getGameSlot = () => {
-    const now = new Date();
-    const currentTime = now.getTime();
+  // const getGameSlot = () => {
+  //   const now = new Date();
+  //   const currentTime = now.getTime();
 
-    const today = new Date();
-    const cutoff1 = new Date(today.setHours(12, 45, 0, 0)).getTime();
-    const cutoff2 = new Date(today.setHours(17, 45, 0, 0)).getTime();
-    const cutoff3 = new Date(today.setHours(19, 45, 0, 0)).getTime();
+  //   const today = new Date();
+  //   const cutoff1 = new Date(today.setHours(12, 45, 0, 0)).getTime();
+  //   const cutoff2 = new Date(today.setHours(17, 45, 0, 0)).getTime();
+  //   const cutoff3 = new Date(today.setHours(19, 45, 0, 0)).getTime();
 
-    let slotLabel = '';
-    let closesAt;
+  //   let slotLabel = '';
+  //   let closesAt;
 
-    if (currentTime < cutoff1) {
-      slotLabel = '1:00 PM';
-      closesAt = new Date(cutoff1);
-    } else if (currentTime < cutoff2) {
-      slotLabel = '6:00 PM';
-      closesAt = new Date(cutoff2);
-    } else if (currentTime < cutoff3) {
-      slotLabel = '8:00 PM';
-      closesAt = new Date(cutoff3);
-    } else {
-      const tomorrow = new Date();
-      tomorrow.setDate(now.getDate() + 1);
-      tomorrow.setHours(12, 45, 0, 0);
-      slotLabel = '1:00 PM';
-      closesAt = tomorrow;
-    }
+  //   if (currentTime < cutoff1) {
+  //     slotLabel = '1:00 PM';
+  //     closesAt = new Date(cutoff1);
+  //   } else if (currentTime < cutoff2) {
+  //     slotLabel = '6:00 PM';
+  //     closesAt = new Date(cutoff2);
+  //   } else if (currentTime < cutoff3) {
+  //     slotLabel = '8:00 PM';
+  //     closesAt = new Date(cutoff3);
+  //   } else {
+  //     const tomorrow = new Date();
+  //     tomorrow.setDate(now.getDate() + 1);
+  //     tomorrow.setHours(12, 45, 0, 0);
+  //     slotLabel = '1:00 PM';
+  //     closesAt = tomorrow;
+  //   }
 
-    return { label: slotLabel, closesAt };
-  };
+  //   return { label: slotLabel, closesAt };
+  // };
 
   // ⏱️ Countdown effect
+  const getGameSlot = () => {
+  const now = new Date();
+  const currentTime = now.getTime();
+
+  const today = new Date();
+  const cutoff1 = new Date(today.setHours(15, 45, 0, 0)).getTime(); // 3:45 PM
+  const cutoff2 = new Date(today.setHours(16, 45, 0, 0)).getTime(); // 4:45 PM
+
+  let slotLabel = '';
+  let closesAt;
+
+  if (currentTime < cutoff1) {
+    slotLabel = '4:00 PM';
+    closesAt = new Date(cutoff1);
+  } else if (currentTime < cutoff2) {
+    slotLabel = '5:00 PM';
+    closesAt = new Date(cutoff2);
+  } else {
+    // After last slot → next day's 4:00 PM
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+    tomorrow.setHours(15, 45, 0, 0); // 3:45 PM
+    slotLabel = '4:00 PM';
+    closesAt = tomorrow;
+  }
+
+  return { label: slotLabel, closesAt };
+};
+
   useEffect(() => {
     const updateCountdown = () => {
       if (!activeGameSlot?.closesAt) return;
@@ -102,7 +131,7 @@ export default function PlayBoard() {
       setUser(currentUser);
       if (currentUser) {
         // const walletRef = doc(db, 'wallets', currentUser.uid);
-        const walletRef = doc(db, 'subwallets', currentUser.uid);
+        const walletRef = doc(db, 's_subwallets', currentUser.uid);
         const walletSnap = await getDoc(walletRef);
         if (walletSnap.exists()) {
           setWalletBalance(walletSnap.data().balance ?? 0);
@@ -148,12 +177,15 @@ export default function PlayBoard() {
       return;
     }
     const slotDate = gameSlot.closesAt;
+    const userDoc = await getDoc(doc(db, 's_users', user.uid));
+    const subAdminId = userDoc.exists() ? userDoc.data().subAdminId || null : null;
     const bet = {
       uid: user.uid,
       email: user.email,
       number: selectedNumber,
       amount: amount,
       range,
+      subAdminId,
       createdAt: serverTimestamp(),
       // day: `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`,
       day: `${String(slotDate.getDate()).padStart(2, '0')}/${String(slotDate.getMonth() + 1).padStart(2, '0')}/${slotDate.getFullYear()}`,
@@ -164,9 +196,9 @@ export default function PlayBoard() {
     setSubmitting(true);
     try {
       // await addDoc(collection(db, 'bets'), bet);
-      await addDoc(collection(db, 'subbets'), bet);
+      await addDoc(collection(db, 's_subbets'), bet);
 
-      const walletRef = doc(db, 'subwallets', user.uid);
+      const walletRef = doc(db, 's_subwallets', user.uid);
       await updateDoc(walletRef, {
         balance: (walletBalance ?? 0) - amount,
         updatedAt: serverTimestamp(),

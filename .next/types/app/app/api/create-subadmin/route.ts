@@ -1,4 +1,4 @@
-// File: E:\Nagaland\gamling\megaend-new\src\app\app\api\create-subadmin\route.js
+// File: E:\megaend-new\src\app\app\api\create-subadmin\route.js
 import * as entry from '../../../../../../src/app/app/api/create-subadmin/route.js'
 import type { NextRequest } from 'next/server.js'
 

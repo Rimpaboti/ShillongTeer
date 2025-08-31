@@ -158,6 +158,59 @@
 // }
 
 
+// import { getAuth } from 'firebase-admin/auth';
+// import { getFirestore } from 'firebase-admin/firestore';
+// import { adminApp } from '@/lib/firebaseAdmin';
+
+// export async function POST(req) {
+//   try {
+//     const body = await req.json();
+//     const { email, password } = body;
+
+//     if (!email || !password) {
+//       return new Response(JSON.stringify({ success: false, error: 'Email and password are required.' }), {
+//         status: 400,
+//         headers: { 'Content-Type': 'application/json' },
+//       });
+//     }
+
+//     const auth = getAuth(adminApp);
+//     const db = getFirestore(adminApp);
+
+//     // ✅ Create sub-admin user
+//     const userRecord = await auth.createUser({ email, password });
+
+//     // ✅ Add to 'users' collection
+//     await db.collection('users').doc(userRecord.uid).set({
+//       uid: userRecord.uid,
+//       email,
+//       role: 'subadmin',
+//       createdAt: new Date().toISOString(),
+//     });
+
+//     // ✅ Auto-create wallet for subadmin
+//     await db.collection('subwallets').doc(userRecord.uid).set({
+//       uid: userRecord.uid,
+//       email,
+//       balance: 0,
+//       createdAt: new Date().toISOString(),
+//     });
+
+//     return new Response(JSON.stringify({ success: true }), {
+//       status: 200,
+//       headers: { 'Content-Type': 'application/json' },
+//     });
+
+//   } catch (error) {
+//     console.error('Error creating sub-admin:', error);
+//     return new Response(JSON.stringify({ success: false, error: error.message }), {
+//       status: 500,
+//       headers: { 'Content-Type': 'application/json' },
+//     });
+//   }
+// }
+
+
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { adminApp } from '@/lib/firebaseAdmin';
@@ -181,7 +234,7 @@ export async function POST(req) {
     const userRecord = await auth.createUser({ email, password });
 
     // ✅ Add to 'users' collection
-    await db.collection('users').doc(userRecord.uid).set({
+    await db.collection('s_users').doc(userRecord.uid).set({
       uid: userRecord.uid,
       email,
       role: 'subadmin',
@@ -189,7 +242,7 @@ export async function POST(req) {
     });
 
     // ✅ Auto-create wallet for subadmin
-    await db.collection('subwallets').doc(userRecord.uid).set({
+    await db.collection('s_subwallets').doc(userRecord.uid).set({
       uid: userRecord.uid,
       email,
       balance: 0,

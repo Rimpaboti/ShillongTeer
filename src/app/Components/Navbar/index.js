@@ -27,7 +27,7 @@ useEffect(() => {
     if (currentUser) {
       console.log('Logged in as:', currentUser.email);
 
-      const userRef = doc(db, 'users', currentUser.uid);
+      const userRef = doc(db, 's_users', currentUser.uid);
       const userSnap = await getDoc(userRef);
 
       let detectedRole = 'user';
@@ -38,7 +38,7 @@ useEffect(() => {
         console.log('Detected role:', detectedRole);
       }
 
-      const collectionName = detectedRole === 'admin' ? 'adminwallets' : 'subwallets';
+      const collectionName = detectedRole === 'admin' ? 's_adminwallets' : 's_subwallets';
       const walletRef = doc(db, collectionName, currentUser.uid);
       const walletSnap = await getDoc(walletRef);
 
@@ -101,6 +101,7 @@ const renderLinks = () => {
 
   const subAdminUserLinks = (
     <>
+      <Link href="/app/add-balance" className={linkClass('/app/add-balance')}>Balance</Link>
       <Link href="/app/sub-admin/add-users" className={linkClass('/app/sub-admin/add-users')}>Add Users</Link>
     </>
   );
@@ -131,7 +132,7 @@ const renderLinks = () => {
         {/* Logo */}
         <Link href="/app/play">
           <div className="text-white font-bold text-lg hover:text-yellow-400 transition">
-            Nagaland Lottery Sambad
+            Shillong Teer 
           </div>
         </Link>
 

@@ -56,7 +56,7 @@ const [withdrawError, setWithdrawError] = useState('');
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const walletRef = doc(db, 'wallets', currentUser.uid);
+        const walletRef = doc(db, 's_subwallets', currentUser.uid);
         const walletSnap = await getDoc(walletRef);
         if (walletSnap.exists()) {
           const bal = walletSnap.data().balance ?? 0;

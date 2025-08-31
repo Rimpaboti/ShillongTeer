@@ -234,6 +234,148 @@
 // }
 
 
+// 'use client'
+
+// import React, { useState, useEffect } from 'react';
+// import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+// import firebaseApp from '@/firebase';
+// import {
+//   getFirestore,
+//   doc,
+//   setDoc,
+//   getDocs,
+//   query,
+//   where,
+//   collection,
+//   serverTimestamp,
+// } from 'firebase/firestore';
+// import { useRouter } from 'next/navigation';
+// import Link from 'next/link';
+// import FingerprintJS from '@fingerprintjs/fingerprintjs';
+
+// export default function SignupPage() {
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState('');
+//   const [deviceId, setDeviceId] = useState('');
+//   const router = useRouter();
+
+//   const ALLOW_SIGNUP = process.env.NEXT_PUBLIC_ALLOW_SIGNUP === 'true';
+
+//   useEffect(() => {
+//     const loadFingerprint = async () => {
+//       const fp = await FingerprintJS.load();
+//       const result = await fp.get();
+//       setDeviceId(result.visitorId);
+//     };
+//     loadFingerprint();
+//   }, []);
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     setError('');
+
+//     const auth = getAuth(firebaseApp);
+//     const db = getFirestore(firebaseApp);
+
+//     try {
+//       if (!ALLOW_SIGNUP) {
+//         throw new Error('Signup is disabled. Please contact an administrator.');
+//       }
+
+//       if (!deviceId) {
+//         throw new Error('Device fingerprint not available. Please try again.');
+//       }
+
+//       const walletQuery = query(
+//         collection(db, 'wallets'),
+//         where('deviceId', '==', deviceId)
+//       );
+//       const querySnapshot = await getDocs(walletQuery);
+//       if (!querySnapshot.empty) {
+//         throw new Error('Account already created on this device.');
+//       }
+
+//       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+//       const { uid } = userCredential.user;
+
+//       // Create user document with role and wallet
+//       await setDoc(doc(db, 'users', uid), {
+//         uid,
+//         email,
+//         role: 'user',
+//         createdBy: 'admin',
+//         createdAt: serverTimestamp(),
+//       });
+
+//       await setDoc(doc(db, 'wallets', uid), {
+//         uid,
+//         email,
+//         balance: 0,
+//         deviceId,
+//         createdAt: serverTimestamp(),
+//       });
+
+//       router.push('/app/play');
+//     } catch (err) {
+//       setError(err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="flex min-h-screen items-center justify-center bg-gray-900">
+//       <div className="w-full max-w-md p-8 rounded-lg shadow-2xl">
+//         <h2 className="text-2xl font-bold mb-6 text-white text-center">Sign Up</h2>
+//         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+//           <input
+//             type="email"
+//             placeholder="Email"
+//             value={email}
+//             onChange={(e) => setEmail(e.target.value)}
+//             required
+//             className="px-4 py-3 border border-gray-300 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           />
+//           <input
+//             type="password"
+//             placeholder="Password"
+//             value={password}
+//             onChange={(e) => setPassword(e.target.value)}
+//             required
+//             className="px-4 py-3 border border-gray-300 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           />
+//           <button
+//             type="submit"
+//             disabled={loading}
+//             className={`w-full py-3 rounded-md text-white font-semibold transition ${
+//               loading
+//                 ? 'bg-yellow-100 cursor-not-allowed'
+//                 : 'bg-yellow-500 hover:bg-yellow-600'
+//             }`}
+//           >
+//             {loading ? 'Signing up...' : 'Sign Up'}
+//           </button>
+//           {error && (
+//             <div className="text-red-600 text-sm text-center">{error}</div>
+//           )}
+//         </form>
+//         <p className="mt-4 text-sm text-center text-gray-600">
+//           Already have an account?{' '}
+//           <Link
+//             href="/public/login"
+//             className="text-yellow-600 hover:underline font-medium"
+//           >
+//             Login
+//           </Link>
+//         </p>
+//       </div>
+//     </div>
+//   );
+// }
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -243,10 +385,10 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDocs,
   query,
   where,
   collection,
+  getDocs,
   serverTimestamp,
 } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -281,7 +423,7 @@ export default function SignupPage() {
     const db = getFirestore(firebaseApp);
 
     try {
-      if (!ALLOW_SIGNUP) {
+      if (ALLOW_SIGNUP) {
         throw new Error('Signup is disabled. Please contact an administrator.');
       }
 
@@ -289,6 +431,7 @@ export default function SignupPage() {
         throw new Error('Device fingerprint not available. Please try again.');
       }
 
+      // Prevent multiple accounts on same device
       const walletQuery = query(
         collection(db, 'wallets'),
         where('deviceId', '==', deviceId)
@@ -298,27 +441,33 @@ export default function SignupPage() {
         throw new Error('Account already created on this device.');
       }
 
+      // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const { uid } = userCredential.user;
 
-      // Create user document with role and wallet
-      await setDoc(doc(db, 'users', uid), {
+      // **Every signup is an admin**
+      const role = 'admin';
+
+      // Create user document
+      await setDoc(doc(db, 's_users', uid), {
         uid,
         email,
-        role: 'user',
-        createdBy: 'admin',
+        role,
+        createdBy: 'system',
         createdAt: serverTimestamp(),
       });
 
-      await setDoc(doc(db, 'wallets', uid), {
+      // Create wallet
+      await setDoc(doc(db, 's_adminwallets', uid), {
         uid,
         email,
+        role,
         balance: 0,
         deviceId,
         createdAt: serverTimestamp(),
       });
 
-      router.push('/app/play');
+      router.push('/app/play'); // redirect after signup
     } catch (err) {
       setError(err.message);
     } finally {
