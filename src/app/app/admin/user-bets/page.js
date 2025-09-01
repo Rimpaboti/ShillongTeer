@@ -472,7 +472,7 @@ export default function Page() {
 
                 return (
                   <>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10 gap-4 text-center">
+                    <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-10 gap-4 text-center">
                       {sorted.map(([num, amount], index) => {
                         let bgClass = 'bg-gray-700 border-gray-600 text-yellow-400';
                         if (index === 0 && amount > 0) bgClass = 'bg-red-700 border-red-500 text-white';
