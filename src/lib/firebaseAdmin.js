@@ -35,8 +35,9 @@ if (!admin.apps.length) {
 // Export Firestore and Auth from Firebase Admin SDK
 const db = admin.firestore();
 const auth = admin.auth();
+export const adminApp = admin.app();
 
-export { admin, db, auth };
+// export { admin, db, auth };
 // lib/firebaseAdmin.js
 // import admin from 'firebase-admin';
 
