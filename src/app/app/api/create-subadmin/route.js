@@ -214,7 +214,7 @@
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { adminApp } from '@/lib/firebaseAdmin';
-
+export const runtime = 'nodejs';
 export async function POST(req) {
   try {
     const body = await req.json();
