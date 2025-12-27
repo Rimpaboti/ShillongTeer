@@ -19,23 +19,23 @@
 // export { admin, db, auth };
 
 // lib/firebaseAdmin.js
-import * as admin from 'firebase-admin';
+// lib/firebaseAdmin.js
+import admin from 'firebase-admin';
 
-// Prevent re-initialization during hot reloads in dev
+// Prevent re-initialization
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     }),
   });
 }
 
-// Export Firestore and Auth from Firebase Admin SDK
-const db = admin.firestore();
-const auth = admin.auth();
+// ✅ EXPORT adminApp (THIS WAS MISSING)
 export const adminApp = admin.app();
+
 
 // export { admin, db, auth };
 // lib/firebaseAdmin.js
